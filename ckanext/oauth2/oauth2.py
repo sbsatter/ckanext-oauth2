@@ -185,7 +185,7 @@ class OAuth2Helper(object):
                         changedGroups = True
                         dbGroup = model.Group(name = group_name)
                         dbGroup.is_organization = True
-                        model.Session.add(member)
+                        model.Session.add(dbGroup)
 
                     memberDb = None
                     for memberOf in membership:
