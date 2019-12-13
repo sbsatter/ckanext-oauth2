@@ -188,8 +188,6 @@ class OAuth2Helper(object):
                         dbGroup.type = 'organization'
                         model.Session.add(dbGroup)
                         log.info('Creatig a group %s', dbGroup.name)
-                        model.Session.commit()
-                        model.Session.remove()
 
                     memberDb = None
                     for memberOf in membership:
