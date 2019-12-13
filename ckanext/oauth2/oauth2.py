@@ -183,7 +183,8 @@ class OAuth2Helper(object):
                     # create group if not exist
                     if dbGroup is None:
                         changedGroups = True
-                        dbGroup = model.Group(name = group_name, is_organization = True)
+                        dbGroup = model.Group(name = group_name)
+                        dbGropup.is_organization = True
                         model.Session.add(member)
 
                     memberDb = None
