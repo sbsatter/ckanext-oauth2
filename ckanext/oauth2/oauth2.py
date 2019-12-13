@@ -78,7 +78,6 @@ class OAuth2Helper(object):
         self.profile_api_mail_field = six.text_type(os.environ.get('CKAN_OAUTH2_PROFILE_API_MAIL_FIELD', toolkit.config.get('ckan.oauth2.profile_api_mail_field', ''))).strip()
         self.profile_api_groupmembership_field = six.text_type(os.environ.get('CKAN_OAUTH2_PROFILE_API_GROUPMEMBERSHIP_FIELD', toolkit.config.get('ckan.oauth2.profile_api_groupmembership_field', ''))).strip()
         self.sysadmin_group_name = six.text_type(os.environ.get('CKAN_OAUTH2_SYSADMIN_GROUP_NAME', toolkit.config.get('ckan.oauth2.sysadmin_group_name', ''))).strip()
-
         self.redirect_uri = urljoin(urljoin(toolkit.config.get('ckan.site_url', 'http://localhost:5000'), toolkit.config.get('ckan.root_path')), constants.REDIRECT_URL)
 
         # Init db
@@ -167,6 +166,53 @@ class OAuth2Helper(object):
         model.Session.add(user)
         model.Session.commit()
         model.Session.remove()
+
+        changedGroups = False
+        if self.profile_api_groupmembership_field and self.profile_api_groupmembership_field in user_data:
+            membership = model.Session.query(model.Member).filter(model.Member.table_name == 'user').filter(model.Member.table_id == user.id).all()
+            
+            for group in user_data[self.profile_api_groupmembership_field]:
+                # expect organization to be {org: '<org-name>', role: '<role>' }
+                if isinstance(group, dict):
+                    group_name = group.org
+                    capacity = group.role.lower()
+                    if not capacity in ["admin", "editor", "member"]:
+                        capacity = "member"
+
+                    dbGroup = model.Session.query(model.Group).filter(model.Group.name == group_name).first()
+                    # create group if not exist
+                    if dbGroup is None:
+                        changedGroups = True
+                        dbGroup = model.Organization(name = group_name, is_organization = True)
+                        model.Session.add(member)
+
+                    memberDb = None
+                    for memberOf in membership:
+                        if memberOf.group_id == dbGroup.id and memberOf.capacity == capacity and memberOf.state == 'active':
+                            memberDb = memberOf
+                            break
+
+                    if not memberDb is None:
+                        membership.remove(memberDb)
+
+                    if memberDb is None:
+                        member = model.Member(table_name='user', table_id=user.id, capacity=capacity, group=dbGroup)
+                        log.info('Add user %s into group %s', user.name, dbGroup.name)
+                        rev = model.repo.new_revision()
+                        rev.author = user.id
+                        model.Session.add(member)
+                        changedGroups = True
+
+
+            for memberRec in membership:
+                changedGroups = True
+                log.info('Removing user %s from group %s', user.name, memberRec.group_id)
+                model.Session.delete(memberRec)
+
+
+            if changedGroups:
+                model.Session.commit()
+                model.Session.remove()
 
         return user.name
 
