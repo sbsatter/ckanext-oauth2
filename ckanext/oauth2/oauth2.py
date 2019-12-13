@@ -174,8 +174,8 @@ class OAuth2Helper(object):
             for group in user_data[self.profile_api_groupmembership_field]:
                 # expect organization to be {org: '<org-name>', role: '<role>' }
                 if isinstance(group, dict):
-                    group_name = group.org
-                    capacity = group.role.lower()
+                    group_name = group['org']
+                    capacity = group['role'].lower()
                     if not capacity in ["admin", "editor", "member"]:
                         capacity = "member"
 
@@ -183,7 +183,7 @@ class OAuth2Helper(object):
                     # create group if not exist
                     if dbGroup is None:
                         changedGroups = True
-                        dbGroup = model.Organization(name = group_name, is_organization = True)
+                        dbGroup = model.Group(name = group_name, is_organization = True)
                         model.Session.add(member)
 
                     memberDb = None
