@@ -14,7 +14,7 @@ The OAuth2 extension allows site visitors to login through an OAuth2 server.
 To install the plugin, **enter your virtualenv** and install the package using `pip` as follows:
 
 ```
-pip install ckanext-oauth2
+pip install git+https://github.com/scc-digitalhub/ckanext-oauth2.git
 ```
 
 Add the following to your CKAN `.ini` (generally `/etc/ckan/default/production.ini`) file:
