@@ -4,9 +4,9 @@ OAuth2 CKAN extension
 [![Build Status](https://travis-ci.org/conwetlab/ckanext-oauth2.svg?branch=master)](https://travis-ci.org/conwetlab/ckanext-oauth2)
 [![Coverage Status](https://coveralls.io/repos/github/conwetlab/ckanext-oauth2/badge.svg?branch=master)](https://coveralls.io/github/conwetlab/ckanext-oauth2?branch=master)
 
-The OAuth2 extension allows site visitors to login through an OAuth2 server.
+The OAuth2 extension allows site visitors to login through a custom OAuth2 server like Auth0 and can fetch user roles from another external service.
 
-**Note**: This extension is being tested in CKAN 2.6, 2.7 and 2.8. These are therefore considered as the supported versions
+**Note**: This extension is being tested in CKAN 2.6, 2.7, 2.8 and 2.9. These are therefore considered as the supported versions
 
 
 ## Installation
@@ -14,15 +14,35 @@ The OAuth2 extension allows site visitors to login through an OAuth2 server.
 To install the plugin, **enter your virtualenv** and install the package using `pip` as follows:
 
 ```
-pip install git+https://github.com/scc-digitalhub/ckanext-oauth2.git
+pip install git+https://github.com/sbsatter/ckanext-oauth2.git
 ```
 
-Add the following to your CKAN `.ini` (generally `/etc/ckan/default/production.ini`) file:
+Add the following to your CKAN `.ini` (generally `/etc/ckan/default/production.ini` or `/etc/ckan/production.ini`) file:
 
 ```
 ckan.plugins = oauth2 <other-plugins>
 
-## OAuth2 configuration
+## GPML OAuth2 Config (Preferred)
+
+ckan.oauth2.register_url = https://digital.gpmarinelitter.org/signup
+ckan.oauth2.reset_url = https://digital.gpmarinelitter.org/login
+ckan.oauth2.edit_url = https://digital.gpmarinelitter.org/profile/
+ckan.oauth2.authorization_endpoint = https://unep-gpml.eu.auth0.com/authorize
+ckan.oauth2.token_endpoint = https://unep-gpml.eu.auth0.com/oauth/token
+ckan.oauth2.profile_api_url = https://unep-gpml.eu.auth0.com/userinfo
+ckan.oauth2.client_id =
+ckan.oauth2.client_secret =
+ckan.oauth2.scope = openid profile email
+ckan.oauth2.rememberer_name = auth_tkt
+ckan.oauth2.profile_api_user_field = sub
+ckan.oauth2.profile_api_fullname_field = name
+ckan.oauth2.profile_api_mail_field = email
+ckan.oauth2.authorization_header = Authorization
+ckan.oauth2.sysadmin_group_name = sysadmin
+ckan.oauth2.jwt_enable = true
+ckan.oauth2.stakeholder_api_token =
+
+## DEFAULT OAuth2 configuration
 
 ckan.oauth2.register_url = https://YOUR_OAUTH_SERVICE/users/sign_up
 ckan.oauth2.reset_url = https://YOUR_OAUTH_SERVICE/users/password/new
@@ -64,10 +84,10 @@ You can also use environment variables to configure this plugin, the name of the
 - `CKAN_OAUTH2_AUTHORIZATION_HEADER`
 - `CKAN_OAUTH2_PROFILE_API_GROUPMEMBERSHIP_FIELD`
 - `CKAN_OAUTH2_SYSADMIN_GROUP_NAME`
-        
+
 
 * The callback URL that you should set on your OAuth 2.0 is: `https://YOUR_CKAN_INSTANCE/oauth2/callback`, replacing `YOUR_CKAN_INSTANCE` by the machine and port where your CKAN instance is running.
 
 ## Credits
 
-Based on the fork from [Conwetlab](https://github.com/conwetlab/ckanext-oauth2)
+Based on the fork from [Conwetlab](https://github.com/conwetlab/ckanext-oauth2) and  [SCC Digital Hub](https://github.com/scc-digitalhub/ckanext-oauth2)
