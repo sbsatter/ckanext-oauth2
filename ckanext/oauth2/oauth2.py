@@ -79,6 +79,8 @@ class OAuth2Helper(object):
         self.profile_api_groupmembership_field = six.text_type(os.environ.get('CKAN_OAUTH2_PROFILE_API_GROUPMEMBERSHIP_FIELD', toolkit.config.get('ckan.oauth2.profile_api_groupmembership_field', ''))).strip()
         self.sysadmin_group_name = six.text_type(os.environ.get('CKAN_OAUTH2_SYSADMIN_GROUP_NAME', toolkit.config.get('ckan.oauth2.sysadmin_group_name', ''))).strip()
         self.redirect_uri = urljoin(urljoin(toolkit.config.get('ckan.site_url', 'http://localhost:5000'), toolkit.config.get('ckan.root_path')), constants.REDIRECT_URL)
+        self.stakeholder_api_token = six.text_type(os.environ.get('CKAN_OAUTH2_STAKEHOLDER_API_TOKEN', toolkit.config.get('ckan.oauth2.stakeholder_api_token', ''))).strip()
+        self.user_default_org = six.text_type(os.environ.get('CKAN_OAUTH2_USER_DEFAULT_ORG', toolkit.config.get('ckan.oauth2.user_default_org', ''))).strip()
 
         # Init db
         db.init_db(model)
@@ -131,12 +133,10 @@ class OAuth2Helper(object):
     def identify(self, token):
 
         if self.jwt_enable:
-
             access_token = bytes(token['access_token'])
             user_data = jwt.decode(access_token, verify=False)
             user = self.user_json(user_data)
         else:
-
             try:
                 if self.legacy_idm:
                     profile_response = requests.get(self.profile_api_url + '?access_token=%s' % token['access_token'], verify=self.verify_https)
@@ -167,53 +167,74 @@ class OAuth2Helper(object):
         model.Session.commit()
         model.Session.remove()
 
+        user_data = self.fetch_user_roles(user_data, user.email, self.stakeholder_api_token, self.user_default_org)
+
+        # log.debug('ROLE-TEST: Checking groups and roles now')
+        # log.debug('ROLE-TEST: user_data: %s', user_data)
+        # log.debug('1')
+
         changedGroups = False
         if self.profile_api_groupmembership_field and self.profile_api_groupmembership_field in user_data:
+            # log.debug('1-1')
             membership = model.Session.query(model.Member).filter(model.Member.table_name == 'user').filter(model.Member.table_id == user.id).all()
-            
+
             for group in user_data[self.profile_api_groupmembership_field]:
+                # log.debug('1-1-1')
+                # log.debug('ROLE-TEST: %s, isinstance(group, dict): %s', group, isinstance(group, dict))
+
                 # expect organization to be {org: '<org-name>', role: '<role>' }
                 if isinstance(group, dict):
+                    # log.debug('1-1-1-1')
                     group_name = group['org']
                     capacity = group['role'].lower()
                     if not capacity in ["admin", "editor", "member"]:
-                        capacity = "member"
+                        # log.debug('1-1-1-1-1')
+                        capacity = "editor"
 
                     dbGroup = model.Session.query(model.Group).filter(model.Group.name == group_name).first()
+                    # log.debug('ROLE-TEST: dbGroup = %s', dbGroup)
+
                     # create group if not exist
                     if dbGroup is None:
+                        # log.debug('1-1-1-1-2')
                         changedGroups = True
                         dbGroup = model.Group(name = group_name, title = group_name, description = group_name)
                         dbGroup.is_organization = True
                         dbGroup.type = 'organization'
                         model.Session.add(dbGroup)
-                        log.info('Creatig a group %s', dbGroup.name)
+                        log.info('Creating a group %s', dbGroup.name)
 
                     memberDb = None
                     for memberOf in membership:
+                        # log.debug('1-1-1-1-3')
+                        # log.debug('ROLE-TEST: memberOf = %s', membership)
                         if memberOf.group_id == dbGroup.id and memberOf.capacity == capacity and memberOf.state == 'active':
                             memberDb = memberOf
                             break
 
                     if not memberDb is None:
+                        # log.debug('1-1-1-1-4')
                         membership.remove(memberDb)
 
                     if memberDb is None:
+                        # log.debug('1-1-1-1-5')
                         member = model.Member(table_name='user', table_id=user.id, capacity=capacity, group=dbGroup)
                         log.info('Add user %s into group %s', user.name, dbGroup.name)
-                        rev = model.repo.new_revision()
-                        rev.author = user.id
+                        # rev = model.repo.new_revision()
+                        # rev.author = user.id
                         model.Session.add(member)
                         changedGroups = True
 
 
             for memberRec in membership:
+                # log.debug('1-1-2')
                 changedGroups = True
                 log.info('Removing user %s from group %s', user.name, memberRec.group_id)
                 model.Session.delete(memberRec)
 
 
             if changedGroups:
+                # log.debug('1-1-3')
                 model.Session.commit()
                 model.Session.remove()
 
@@ -241,10 +262,33 @@ class OAuth2Helper(object):
         # Update fullname
         if self.profile_api_fullname_field != "" and self.profile_api_fullname_field in user_data:
             user.fullname = user_data[self.profile_api_fullname_field]
-
+        # log.debug(user_data)
+        # log.debug(user)
         # Update sysadmin status
         if self.profile_api_groupmembership_field != "" and self.profile_api_groupmembership_field in user_data:
             user.sysadmin = self.sysadmin_group_name in user_data[self.profile_api_groupmembership_field]
+        # user.sysadmin = False
+
+        return user
+
+    def fetch_user_roles(self, user, email, token, default_org):
+        headers = {
+            'Content-Type': 'application/json',
+            'User-Agent': 'PostmanRuntime/7.28.4',
+            'Authorization': 'Bearer {}'.format(token)
+        }
+        url = "https://digital.gpmarinelitter.org/api/stakeholder?email-like={}&page=1".format(email)
+
+        log.info("Querying uri %s for users, token: %s", url, headers['Authorization'])
+        response = requests.request("GET", url, headers=headers).json()
+
+        stakeholders = response['stakeholders']
+        for stakeholder in stakeholders:
+            # if stakeholder.email == email:
+            log.info('Found user: %s' % stakeholder['first_name'])
+            role = 'admin' if stakeholder['role'] == 'admin' else 'editor'
+            user['groups'] = [{'role': role, 'org': default_org}]
+            # log.debug("Groups: %s", user['groups'])
 
         return user
 
