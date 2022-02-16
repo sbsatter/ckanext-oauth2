@@ -287,7 +287,7 @@ class OAuth2Helper(object):
         for stakeholder in stakeholders:
             # if stakeholder.email == email:
             log.info('Found user: %s' % stakeholder['first_name'])
-            role = 'admin' if stakeholder['role'] == 'admin' else 'editor'
+            role = 'admin' if stakeholder['role'].lower() == 'admin' else 'editor'
             user['groups'] = [{'role': role, 'org': default_org}]
             # log.debug("Groups: %s", user['groups'])
 
