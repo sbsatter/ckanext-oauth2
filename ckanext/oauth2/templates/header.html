@@ -1,6 +1,71 @@
 {% ckan_extends %}
 
+{% block header_account_logged %}
+  {{ super() }}
+{#  Authorization: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NDQ4MzU4OTUsImp0aSI6ImFwVlZaT2lwVWVqVEVabFVmSUxWTW0xMWFVQ0J3YmJBbndjSlNkQV8zOWdPdk5TcmNfSEJaSlAxQ1AtaUJKXzlOdkI0ZVFXbkwwbFBPbWVBIn0.vXrCvRAtqOgK3Mt0INdPlRNZekMrUajd6nvlM4KEslk`,#}
+  <script>
+  {#const FRONT_END_URL = 'http://localhost:3000';#}
+  const FRONT_END_URL = 'https://unepazecosysadlsstorage.z20.web.core.windows.net';
+  (async function () {
+	function generateRandomString(length = 5) {
+		let result           = '';
+		const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+		const charactersLength = characters.length;
+		for ( let i = 0; i < length; i++ ) {
+		  result += characters.charAt(Math.floor(Math.random() *
+	 		charactersLength));
+	   }
+	   return result;
+	}
+
+
+	async function createApiKeyForUser(userName) {
+		const response = await fetch(`${window.location.origin}/api/3/action/api_token_create`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NDUwMzUyNzksImp0aSI6ImRsUnFobmZKYmRNVVFTV1hTYnNrWTl3UzN5VGZZdjJ0cjktVkpBSzR5cVFPWnJRaTdWcTBvcW80UUd4MFRiSVBVTjk4em1qRXFnenpsVV9tIn0.vLjw7IMbEK9gCZQh8SPWXjHipGiQkdLsKRl95J7wiY0`,
+			},
+			body: JSON.stringify({
+				"user": userName,
+				"name": generateRandomString(),
+			}),
+		});
+		const data = await response.json();
+		return data.result.token;
+	}
+
+	if (window.location.pathname === '/dashboard/' || window.location.pathname === '/dashboard') {
+		const overlapElement = document.createElement('div');
+		overlapElement.style.height = '100%';
+		overlapElement.style.width = '100%';
+		overlapElement.style.background = '#fff';
+		overlapElement.style.position = 'absolute';
+		overlapElement.style.top = '0px';
+		overlapElement.style.left = '0px';
+		overlapElement.style.zIndex = '1000';
+		document.body.appendChild(overlapElement);
+		const profileNode = document.querySelector('[title="View profile"]');
+		if (profileNode) {
+			console.log('user is signed in ');
+			const [userName] = profileNode.href.split('/').reverse();
+			const unescapedUserName = unescape(userName);
+			console.log('username is ', unescapedUserName);
+			const token = await createApiKeyForUser(unescapedUserName);
+
+			window.location = `${FRONT_END_URL}/oauth2/callback?token=${token}`;
+		} else {
+			window.location = `${FRONT_END_URL}/oauth2/callback?token=`;
+		}
+	}
+})();
+</script>
+
+
+    {% endblock %}
+
 {% if header_account_notlogged is defined %}
+
     {% block header_account_notlogged %}
     <li>{% link_for _('Log in'), controller='user', action='login' %}</li>
     <li>{% link_for _('Register'), controller='user', action='register', class_='sub' %}</li>

@@ -78,7 +78,8 @@ class OAuth2Helper(object):
         self.profile_api_mail_field = six.text_type(os.environ.get('CKAN_OAUTH2_PROFILE_API_MAIL_FIELD', toolkit.config.get('ckan.oauth2.profile_api_mail_field', ''))).strip()
         self.profile_api_groupmembership_field = six.text_type(os.environ.get('CKAN_OAUTH2_PROFILE_API_GROUPMEMBERSHIP_FIELD', toolkit.config.get('ckan.oauth2.profile_api_groupmembership_field', ''))).strip()
         self.sysadmin_group_name = six.text_type(os.environ.get('CKAN_OAUTH2_SYSADMIN_GROUP_NAME', toolkit.config.get('ckan.oauth2.sysadmin_group_name', ''))).strip()
-        self.redirect_uri = urljoin(urljoin(toolkit.config.get('ckan.site_url', 'http://localhost:5000'), toolkit.config.get('ckan.root_path')), constants.REDIRECT_URL)
+        # self.redirect_uri = urljoin(urljoin(toolkit.config.get('ckan.site_url', 'http://localhost:5000'), toolkit.config.get('ckan.root_path')), constants.REDIRECT_URL)
+        self.redirect_uri = six.text_type(os.environ.get('CKAN_OAUTH2_REDIRECT_URI', toolkit.config.get('ckan.oauth2.redirect_uri', urljoin(urljoin(toolkit.config.get('ckan.site_url', 'http://localhost:5000'), toolkit.config.get('ckan.root_path')), constants.REDIRECT_URL)))).strip()
         self.stakeholder_api_token = six.text_type(os.environ.get('CKAN_OAUTH2_STAKEHOLDER_API_TOKEN', toolkit.config.get('ckan.oauth2.stakeholder_api_token', ''))).strip()
         self.user_default_org = six.text_type(os.environ.get('CKAN_OAUTH2_USER_DEFAULT_ORG', toolkit.config.get('ckan.oauth2.user_default_org', ''))).strip()
 
@@ -310,10 +311,14 @@ class OAuth2Helper(object):
         for header, value in headers:
             toolkit.response.headers.add(header, value)
 
-    def redirect_from_callback(self):
+    def redirect_from_callback(self,):
         '''Redirect to the callback URL after a successful authentication.'''
         state = toolkit.request.params.get('state')
         came_from = get_came_from(state)
+        # generated_token = toolkit.get_action('api_token_create')(data_dict={u'user': username, u'name': name})
+        # log.info('Generated Token for %s: %s', username, generated_token)
+        # toolkit.response.token = generated_token
+        # toolkit.response.location = '/oauth2/callback2'
         toolkit.response.status = 302
         toolkit.response.location = came_from
 
