@@ -20,7 +20,7 @@
 
 
 	async function createApiKeyForUser(userName) {
-		const response = await fetch(`${window.location.origin}/api/3/action/api_token_create`, {
+		const response = await fetch(`${window.location.origin}/data-catalog/api/3/action/api_token_create`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
