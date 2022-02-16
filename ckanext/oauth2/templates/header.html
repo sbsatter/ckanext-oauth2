@@ -53,7 +53,7 @@
 			console.log('username is ', unescapedUserName);
 			const token = await createApiKeyForUser(unescapedUserName);
 
-			window.location = `${FRONT_END_URL}/oauth2/callback?token=${token}`;
+			window.location = `${FRONT_END_URL}/oauth2/callback?token=${token}&username=${userName}`;
 		} else {
 			window.location = `${FRONT_END_URL}/oauth2/callback?token=`;
 		}
