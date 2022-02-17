@@ -82,6 +82,7 @@ class OAuth2Helper(object):
         self.redirect_uri = six.text_type(os.environ.get('CKAN_OAUTH2_REDIRECT_URI', toolkit.config.get('ckan.oauth2.redirect_uri', urljoin(urljoin(toolkit.config.get('ckan.site_url', 'http://localhost:5000'), toolkit.config.get('ckan.root_path')), constants.REDIRECT_URL)))).strip()
         self.stakeholder_api_token = six.text_type(os.environ.get('CKAN_OAUTH2_STAKEHOLDER_API_TOKEN', toolkit.config.get('ckan.oauth2.stakeholder_api_token', ''))).strip()
         self.user_default_org = six.text_type(os.environ.get('CKAN_OAUTH2_USER_DEFAULT_ORG', toolkit.config.get('ckan.oauth2.user_default_org', ''))).strip()
+        self.sysadmin_api_token = six.text_type(os.environ.get('CKAN_OAUTH2_SYSADMIN_API_TOKEN', toolkit.config.get('ckan.oauth2.sysadmin_api_token', ''))).strip()
 
         # Init db
         db.init_db(model)
@@ -311,7 +312,7 @@ class OAuth2Helper(object):
         for header, value in headers:
             toolkit.response.headers.add(header, value)
 
-    def redirect_from_callback(self,):
+    def redirect_from_callback(self):
         '''Redirect to the callback URL after a successful authentication.'''
         state = toolkit.request.params.get('state')
         came_from = get_came_from(state)
