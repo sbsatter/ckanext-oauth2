@@ -5,6 +5,7 @@
 {#  Authorization: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NDQ4MzU4OTUsImp0aSI6ImFwVlZaT2lwVWVqVEVabFVmSUxWTW0xMWFVQ0J3YmJBbndjSlNkQV8zOWdPdk5TcmNfSEJaSlAxQ1AtaUJKXzlOdkI0ZVFXbkwwbFBPbWVBIn0.vXrCvRAtqOgK3Mt0INdPlRNZekMrUajd6nvlM4KEslk`,#}
   <script>
   {#const FRONT_END_URL = 'http://localhost:3000';#}
+  const API_TOKEN = '{{ h.oauth2_sysadmin_api_token() }}';
   const FRONT_END_URL = 'https://unepazecosysadlsstorage.z20.web.core.windows.net';
   (async function () {
 	function generateRandomString(length = 5) {
@@ -24,7 +25,7 @@
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				Authorization: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NDUwMzUyNzksImp0aSI6ImRsUnFobmZKYmRNVVFTV1hTYnNrWTl3UzN5VGZZdjJ0cjktVkpBSzR5cVFPWnJRaTdWcTBvcW80UUd4MFRiSVBVTjk4em1qRXFnenpsVV9tIn0.vLjw7IMbEK9gCZQh8SPWXjHipGiQkdLsKRl95J7wiY0`,
+				Authorization: API_TOKEN,
 			},
 			body: JSON.stringify({
 				"user": userName,
