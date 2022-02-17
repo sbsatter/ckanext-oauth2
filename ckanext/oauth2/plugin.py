@@ -26,12 +26,13 @@ import os
 
 from functools import partial
 from ckan import plugins
-from ckan.common import g
+from ckan.common import g, config
 from ckan.plugins import toolkit
 from urlparse import urlparse
 
 log = logging.getLogger(__name__)
 
+DEFAULT_API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NDUwODQwMzUsImp0aSI6IklLZzh3d2ZMTW9wbDBzWjJLeXJTZmlwcUpaSzRvQVllak9IdVMtVlJaakZxVWlyckxKWktuYzFDalRRcncyQzh2aTdpM3RLTk44MkRXejhKIn0.ttS8Vd1PkBqTBpMSTiVKldlAlksa9hKQDIOaOX_z_EY'
 
 def _no_permissions(context, msg):
     user = context['user']
@@ -83,12 +84,18 @@ def _get_previous_page(default_page):
     return came_from_url
 
 
+def ckan_oauth2_sysadmin_api_token():
+    api_token = config.get('ckan.oauth2.sysadmin_api_token', DEFAULT_API_TOKEN)
+    return api_token
+
+
 class OAuth2Plugin(plugins.SingletonPlugin):
 
     plugins.implements(plugins.IAuthenticator, inherit=True)
     plugins.implements(plugins.IAuthFunctions, inherit=True)
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IConfigurer)
+    plugins.implements(plugins.ITemplateHelpers)
 
     def __init__(self, name=None):
         '''Store the OAuth 2 client configuration'''
@@ -178,8 +185,15 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         self.register_url = os.environ.get("CKAN_OAUTH2_REGISTER_URL", config.get('ckan.oauth2.register_url', None))
         self.reset_url = os.environ.get("CKAN_OAUTH2_RESET_URL", config.get('ckan.oauth2.reset_url', None))
         self.edit_url = os.environ.get("CKAN_OAUTH2_EDIT_URL", config.get('ckan.oauth2.edit_url', None))
-        self.authorization_header = os.environ.get("CKAN_OAUTH2_AUTHORIZATION_HEADER", config.get('ckan.oauth2.authorization_header', 'Authorization')).lower()
+        self.authorization_header = os.environ.get("CKAN_OAUTH2_AUTHORIZATION_HEADER",
+                                                   config.get('ckan.oauth2.authorization_header',
+                                                              'Authorization')).lower()
 
         # Add this plugin's templates dir to CKAN's extra_template_paths, so
         # that CKAN will use this plugin's custom templates.
         plugins.toolkit.add_template_directory(config, 'templates')
+
+    def get_helpers(self):
+        return {
+            'oauth2_sysadmin_api_token': ckan_oauth2_sysadmin_api_token
+        }
