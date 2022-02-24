@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 import logging
 import oauth2
 import os
+import constants
 
 from functools import partial
 from ckan import plugins
@@ -90,7 +91,6 @@ def ckan_oauth2_sysadmin_api_token():
 
 
 class OAuth2Plugin(plugins.SingletonPlugin):
-
     plugins.implements(plugins.IAuthenticator, inherit=True)
     plugins.implements(plugins.IAuthFunctions, inherit=True)
     plugins.implements(plugins.IRoutes, inherit=True)
@@ -115,6 +115,13 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         m.connect('/oauth2/callback',
                   controller='ckanext.oauth2.controller:OAuth2Controller',
                   action='callback')
+
+        # We need to handle petitions received to the Callback URL
+        # since some error can arise and we need to process them
+
+        m.connect(constants.USER_TOKEN_EXTRACTOR,
+                  controller='ckanext.oauth2.controller:OAuth2Controller',
+                  action='token_extractor')
 
         # Redirect the user to the OAuth service register page
         if self.register_url:
@@ -167,6 +174,10 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             toolkit.c.user = user_name
             toolkit.c.usertoken = self.oauth2helper.get_stored_token(user_name)
             toolkit.c.usertoken_refresh = partial(_refresh_and_save_token, user_name)
+            #
+            # generated_token = toolkit.get_action('api_token_create')(context={'model': model}, data_dict={u'user': user_name, u'name': datetime.now()})
+            # log.info('Generated Token for %s: %s', user_name, generated_token)
+            # toolkit.c.generated_token = generated_token
         else:
             g.user = None
             log.warn('The user is not currently logged...')

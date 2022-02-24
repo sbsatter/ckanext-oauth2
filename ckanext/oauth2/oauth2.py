@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 
 import base64
 import ckan.model as model
+from ckan.common import session
 import db
 import json
 import logging
@@ -312,16 +313,25 @@ class OAuth2Helper(object):
         for header, value in headers:
             toolkit.response.headers.add(header, value)
 
-    def redirect_from_callback(self):
+    def redirect_to_token_extraction(self, location=constants.USER_TOKEN_EXTRACTOR):
         '''Redirect to the callback URL after a successful authentication.'''
-        state = toolkit.request.params.get('state')
-        came_from = get_came_from(state)
-        # generated_token = toolkit.get_action('api_token_create')(data_dict={u'user': username, u'name': name})
-        # log.info('Generated Token for %s: %s', username, generated_token)
-        # toolkit.response.token = generated_token
-        # toolkit.response.location = '/oauth2/callback2'
+        # came_from = get_came_from(state)
+        # if use state, uncomment two lines below
+        # state = toolkit.request.params.get('state')
+        # location = '{}?state={}'.format(location, state)
+        # log.debug(location)
+        toolkit.response.location = location
         toolkit.response.status = 302
-        toolkit.response.location = came_from
+        # toolkit.response.location = came_from
+
+    def redirect_from_callback_with_token(self, token, username):
+        '''Redirect to the callback URL after a successful authentication.'''
+        # state = toolkit.request.params.get('state')
+        # came_from = get_came_from(state)
+        frontend_url = 'https://unepazecosysadlsstorage.z20.web.core.windows.net/oauth2/callback'
+        location = '{}?token={}&username={}'.format(frontend_url, token, username)
+        toolkit.response.location = location
+        toolkit.response.status = 302
 
     def get_stored_token(self, user_name):
         user_token = db.UserToken.by_user_name(user_name=user_name)

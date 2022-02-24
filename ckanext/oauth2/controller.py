@@ -22,6 +22,7 @@ from __future__ import unicode_literals
 
 import logging
 import constants
+from ckan import model
 
 from ckan.common import session
 import ckan.lib.helpers as helpers
@@ -59,7 +60,7 @@ class OAuth2Controller(base.BaseController):
             user_name = self.oauth2helper.identify(token)
             self.oauth2helper.remember(user_name)
             self.oauth2helper.update_token(user_name, token)
-            self.oauth2helper.redirect_from_callback()
+            self.oauth2helper.redirect_to_token_extraction()
         except Exception as e:
 
             session.save()
@@ -81,3 +82,24 @@ class OAuth2Controller(base.BaseController):
             redirect_url = '/' if redirect_url == constants.INITIAL_PAGE else redirect_url
             toolkit.response.location = redirect_url
             helpers.flash_error(error_description)
+
+    def token_extractor(self):
+        WEB_API_TOKEN = 'WEB_API_TOKEN'
+        context = {
+            u'model': model,
+            u'session': model.Session,
+            u'user': toolkit.g.user,
+            u'auth_user_obj': toolkit.g.userobj,
+            u'for_view': True,
+            u'include_plugin_extras': True
+        }
+        tokens = toolkit.get_action('api_token_list')(context=context, data_dict={u'user': toolkit.c.user})
+
+        # remove old tokens
+        for token in tokens:
+            toolkit.get_action('api_token_revoke')(context=context, data_dict={u'jti': token['id']})
+        # create new token
+        new_token = toolkit.get_action('api_token_create')(context=context, data_dict={u'user': toolkit.c.user, u'name': WEB_API_TOKEN})
+        user = toolkit.get_action('user_show')(data_dict={'id': toolkit.c.user})
+        log.debug('Current user', user)
+        self.oauth2helper.redirect_from_callback_with_token(token=new_token['token'], username=toolkit.c.user)
