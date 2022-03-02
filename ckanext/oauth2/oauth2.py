@@ -103,6 +103,10 @@ class OAuth2Helper(object):
         # CKAN 2.6 only supports bytes
         return toolkit.redirect_to(auth_url.encode('utf-8'))
 
+    def invoke_logout(self, logout_url):
+        # This function is called before logging out a user
+        return toolkit.redirect_to(logout_url)
+
     def get_token(self):
         oauth = OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
 

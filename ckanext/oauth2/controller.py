@@ -54,6 +54,13 @@ class OAuth2Controller(base.BaseController):
 
         self.oauth2helper.challenge(came_from_url)
 
+    def invoke_logout(self):
+        log.debug('invoking logout')
+
+        redirect_to_url = '/user/logout?came_from=/logged_out_user'
+
+        self.oauth2helper.invoke_logout(redirect_to_url)
+
     def callback(self):
         try:
             token = self.oauth2helper.get_token()

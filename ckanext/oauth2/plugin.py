@@ -110,6 +110,10 @@ class OAuth2Plugin(plugins.SingletonPlugin):
                   controller='ckanext.oauth2.controller:OAuth2Controller',
                   action='login')
 
+        m.connect('/user/external-logout',
+                  controller='ckanext.oauth2.controller:OAuth2Controller',
+                  action='invoke_logout')
+
         # We need to handle petitions received to the Callback URL
         # since some error can arise and we need to process them
         m.connect('/oauth2/callback',
@@ -122,6 +126,8 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         m.connect(constants.USER_TOKEN_EXTRACTOR,
                   controller='ckanext.oauth2.controller:OAuth2Controller',
                   action='token_extractor')
+
+        m.redirect('/logged_out_user', 'https://unepazecosysadlsstorage.z20.web.core.windows.net/')
 
         # Redirect the user to the OAuth service register page
         if self.register_url:
