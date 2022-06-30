@@ -279,24 +279,25 @@ class OAuth2Helper(object):
         return user
 
     def fetch_user_roles(self, user, email, token, default_org):
-        headers = {
-            'Content-Type': 'application/json',
-            'User-Agent': 'PostmanRuntime/7.28.4',
-            'Authorization': 'Bearer {}'.format(token)
-        }
-        url = "https://digital.gpmarinelitter.org/api/stakeholder?email-like={}&page=1".format(email)
-
-        log.info("Querying uri %s for users, token: %s", url, headers['Authorization'])
-        response = requests.request("GET", url, headers=headers).json()
-
-        stakeholders = response['stakeholders']
-        for stakeholder in stakeholders:
-            # if stakeholder.email == email:
-            log.info('Found user: %s' % stakeholder['first_name'])
-            role = 'admin' if stakeholder['role'].lower() == 'admin' else 'editor'
-            user['groups'] = [{'role': role, 'org': default_org}]
-            # log.debug("Groups: %s", user['groups'])
-
+        # headers = {
+        #     'Content-Type': 'application/json',
+        #     'User-Agent': 'PostmanRuntime/7.28.4',
+        #     'Authorization': 'Bearer {}'.format(token)
+        # }
+        # url = "https://digital.gpmarinelitter.org/api/stakeholder?email-like={}&page=1".format(email)
+        #
+        # log.info("Querying uri %s for users, token: %s", url, headers['Authorization'])
+        # response = requests.request("GET", url, headers=headers).json()
+        #
+        # stakeholders = response['stakeholders']
+        # for stakeholder in stakeholders:
+        #     # if stakeholder.email == email:
+        #     log.info('Found user: %s' % stakeholder['first_name'])
+        #     role = 'admin' if stakeholder['role'].lower() == 'admin' else 'editor'
+        #     user['groups'] = [{'role': role, 'org': default_org}]
+        #     # log.debug("Groups: %s", user['groups'])
+        role = 'admin' if user['https://digital.gpmarinelitter.org/role'].lower() == 'admin' else 'editor'
+        user['groups'] = [{'role': role, 'org': default_org}]
         return user
 
     def _get_rememberer(self, environ):
