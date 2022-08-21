@@ -140,7 +140,7 @@ class OAuth2Helper(object):
     def identify(self, token):
 
         if self.jwt_enable:
-            access_token = bytes(token['access_token'])
+            access_token = bytes(token['id_token'])
             user_data = jwt.decode(access_token, verify=False)
             user = self.user_json(user_data)
         else:
