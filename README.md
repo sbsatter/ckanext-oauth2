@@ -88,6 +88,13 @@ You can also use environment variables to configure this plugin, the name of the
 
 * The callback URL that you should set on your OAuth 2.0 is: `https://YOUR_CKAN_INSTANCE/oauth2/callback`, replacing `YOUR_CKAN_INSTANCE` by the machine and port where your CKAN instance is running.
 
+## Pending items
+- On multiple sessions, previous sessions are discarded. Support to add multiple sessions.
+- When use is logged out from frontend API, user needs to be logged out of CKAN as well. Frontend needs to adapt the following:
+  - Frontend needs to logout using CKAN, instead of Auth0 API
+  - Frontend should redirect the user to: /user/external-logout
+  - On successful logout, the user is redirected back to the Single Page Application
+
 ## Credits
 
 Based on the fork from [Conwetlab](https://github.com/conwetlab/ckanext-oauth2) and  [SCC Digital Hub](https://github.com/scc-digitalhub/ckanext-oauth2)
